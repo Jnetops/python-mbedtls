@@ -22,72 +22,7 @@ from mbedtls.tls import _enable_debug_output
 from mbedtls.tls import _PSKSToreProxy as PSKStoreProxy
 from mbedtls.tls import _set_debug_level
 from mbedtls.x509 import CRT, CSR, BasicConstraints
-
-
-class Client:
-    def __init__(self, cli_conf, proto, srv_address, srv_hostname):
-        super().__init__()
-        self.cli_conf = cli_conf
-        self.proto = proto
-        self.srv_address = srv_address
-        self.srv_hostname = srv_hostname
-        self._sock = None
-
-    def __enter__(self):
-        self.start()
-        return self
-
-    def __exit__(self, *exc_info):
-        self.stop()
-
-    def __del__(self):
-        self.stop()
-
-    @property
-    def context(self):
-        if self._sock is None:
-            return None
-        return self._sock.context
-
-    def do_handshake(self):
-        if not self._sock:
-            return
-
-        self._sock.do_handshake()
-
-    def echo(self, buffer, chunksize):
-        if not self._sock:
-            return
-
-        view = memoryview(buffer)
-        received = bytearray()
-        for idx in range(0, len(view), chunksize):
-            part = view[idx : idx + chunksize]
-            amt = self._sock.send(part)
-            received += self._sock.recv(2 << 13)
-        return received
-
-    def start(self):
-        if self._sock:
-            self.stop()
-
-        self._sock = ClientContext(self.cli_conf).wrap_socket(
-            socket.socket(socket.AF_INET, self.proto),
-            server_hostname=self.srv_hostname,
-        )
-        self._sock.connect(self.srv_address)
-
-    def stop(self):
-        if not self._sock:
-            return
-
-        with suppress(TLSError, OSError):
-            self._sock.close()
-        self._sock = None
-
-    def restart(self):
-        self.stop()
-        self.start()
+from programs.client import Client
 
 
 class Server:
