@@ -1540,6 +1540,7 @@ cdef class TLSWrappedSocket:
         # Default to pass-through BIO.
         self._ctx.fd = <int>socket.fileno()
         self._as_bio()
+        self._closed = False
 
     def __cinit__(self):
         _net.mbedtls_net_init(&self._ctx)
@@ -1549,6 +1550,13 @@ cdef class TLSWrappedSocket:
 
     def __getstate__(self):
         raise TypeError(f"cannot pickle {self.__class__.__name__!r} object")
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *exc_info):
+        if not self._closed:
+            self.close()
 
     cdef void _as_bio(self):
         _tls.mbedtls_ssl_set_bio(
@@ -1601,6 +1609,7 @@ cdef class TLSWrappedSocket:
         self._socket.bind(address)
 
     def close(self):
+        self._closed = True
         self._buffer.shutdown()
         self._socket.close()
 

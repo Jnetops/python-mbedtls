@@ -1,6 +1,7 @@
 [next]
 
 * tls: Add support for session caching.
+* tls: Add context manager to `TLSWrappedSocket`
 
 [1.6.0] - 2021-10-03
 
