@@ -443,7 +443,7 @@ cdef class _BaseConfiguration:
             &self._ctx, &_rnd.mbedtls_ctr_drbg_random, &__rng._ctx)
 
         # Disable renegotiation.
-        _tls.mbedtls_ssl_conf_renegotiation(&self._ctx, 0)
+        _tls.mbedtls_ssl_conf_renegotiation(&self._ctx, 1)
 
     def __cinit__(self):
         _tls.mbedtls_ssl_config_init(&self._ctx)
