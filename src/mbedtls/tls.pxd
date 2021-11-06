@@ -305,6 +305,9 @@ cdef extern from "mbedtls/ssl.h" nogil:
     void mbedtls_ssl_conf_renegotiation(
         mbedtls_ssl_config *conf,
         int renegotiation)
+    void mbedtls_ssl_conf_legacy_renegotiation(
+        mbedtls_ssl_config *conf,
+        int allow_legacy)
     # mbedtls_ssl_conf_legacy_renegotiation
     # mbedtls_ssl_conf_renegotiation_enforced
     # mbedtls_ssl_conf_renegotiation_period
