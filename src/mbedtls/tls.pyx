@@ -38,6 +38,8 @@ import mbedtls._ringbuf as _rb
 import mbedtls.exceptions as _exc
 import mbedtls.pk as _pk
 
+helloResest = 0
+
 
 cdef _rnd.Random __rng = _rnd.default_rng()
 
@@ -1319,7 +1321,9 @@ cdef class _BaseContext:
         if ret == 0:
             return
         elif ret == _tls.MBEDTLS_ERR_SSL_WANT_READ:
-            self._reset()
+            if helloResest == 0:
+                self._reset()
+                helloResest = 1
             raise WantReadError()
         elif ret == _tls.MBEDTLS_ERR_SSL_WANT_WRITE:
             raise WantWriteError()
