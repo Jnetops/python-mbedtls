@@ -1195,6 +1195,7 @@ cdef class _BaseContext:
     """
     def __init__(self, _BaseConfiguration configuration not None):
         self._conf = configuration
+        self.helloReset = 0
         _exc.check_error(_tls.mbedtls_ssl_setup(&self._ctx, &self._conf._ctx))
 
     def __cinit__(self):
@@ -1321,8 +1322,9 @@ cdef class _BaseContext:
         if ret == 0:
             return
         elif ret == _tls.MBEDTLS_ERR_SSL_WANT_READ:
-            if self._state is HandshakeStep.SERVER_HELLO:
+            if self.helloReset == 0:
                 self._reset()
+                self.helloReset = 1
             raise WantReadError()
         elif ret == _tls.MBEDTLS_ERR_SSL_WANT_WRITE:
             raise WantWriteError()
