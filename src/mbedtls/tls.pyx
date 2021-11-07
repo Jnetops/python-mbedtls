@@ -38,7 +38,7 @@ import mbedtls._ringbuf as _rb
 import mbedtls.exceptions as _exc
 import mbedtls.pk as _pk
 
-
+helloReset = 0
 
 
 cdef _rnd.Random __rng = _rnd.default_rng()
@@ -127,6 +127,12 @@ cdef int _psk_cb(
         except Exception:
             return 1
 
+
+def getHelloReset():
+    return helloReset
+
+def setHelloReset(int helloNumb):
+    helloReset = helloNumb
 
 def _set_debug_level(int level):
     """Set debug level for logging."""
@@ -1321,9 +1327,9 @@ cdef class _BaseContext:
         if ret == 0:
             return
         elif ret == _tls.MBEDTLS_ERR_SSL_WANT_READ:
-            if self.helloReset == 0:
+            if getHelloReset() == 0:
                 self._reset()
-                self.helloReset = 1
+                setHelloReset(1)
             raise WantReadError()
         elif ret == _tls.MBEDTLS_ERR_SSL_WANT_WRITE:
             raise WantWriteError()
@@ -1403,7 +1409,6 @@ cdef class ServerContext(_BaseContext):
     # _pep543.ServerContext
 
     def __init__(self, _BaseConfiguration configuration not None):
-        self.helloReset = 0
         _tls.mbedtls_ssl_conf_endpoint(
             &configuration._ctx, _tls.MBEDTLS_SSL_IS_SERVER)
         super(ServerContext, self).__init__(configuration)
