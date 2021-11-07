@@ -38,8 +38,6 @@ import mbedtls._ringbuf as _rb
 import mbedtls.exceptions as _exc
 import mbedtls.pk as _pk
 
-helloReset = 0
-
 
 cdef _rnd.Random __rng = _rnd.default_rng()
 
@@ -127,12 +125,6 @@ cdef int _psk_cb(
         except Exception:
             return 1
 
-
-def getHelloReset():
-    return helloReset
-
-def setHelloReset(int helloNumb):
-    helloReset = helloNumb
 
 def _set_debug_level(int level):
     """Set debug level for logging."""
