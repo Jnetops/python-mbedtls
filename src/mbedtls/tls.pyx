@@ -1323,6 +1323,9 @@ cdef class _BaseContext:
     def _do_handshake_step(self):
         if self._state is HandshakeStep.HANDSHAKE_OVER:
             raise ValueError("handshake already over")
+        with open(r"C:\Users\Netops\Downloads\test.txt", "w") as file1:
+            file1.write(str(self._state)+" \n")
+            file1.write(str(self._cookie)+" \n")
         self._handle_handshake_response(_tls.mbedtls_ssl_handshake_step(&self._ctx))
 
     def _renegotiate(self):
