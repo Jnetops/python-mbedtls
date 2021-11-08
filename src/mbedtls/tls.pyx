@@ -1195,13 +1195,13 @@ cdef class TLSSession:
 cdef class _BaseContext:
     # _pep543._BaseContext
     """Context base class.
-    _resetCount = 0
+    cdef int _resetCount
     Args:
         configuration (TLSConfiguration): The configuration.
 
     """
     def __init__(self, _BaseConfiguration configuration not None):
-        
+        self._resetCount = 0
         self._conf = configuration
         _exc.check_error(_tls.mbedtls_ssl_setup(&self._ctx, &self._conf._ctx))
 
@@ -1335,9 +1335,9 @@ cdef class _BaseContext:
         if ret == 0:
             return
         elif ret == _tls.MBEDTLS_ERR_SSL_WANT_READ:
-            if _BaseContext._resetCount == 0:
+            if self._resetCount == 0:
                 self._reset()
-                _BaseContext._resetCount = _BaseContext._resetCount + 1
+                self._resetCount = self._resetCount + 1
             raise WantReadError()
         elif ret == _tls.MBEDTLS_ERR_SSL_WANT_WRITE:
             raise WantWriteError()
