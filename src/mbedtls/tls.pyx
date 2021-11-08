@@ -1304,6 +1304,14 @@ cdef class _BaseContext:
     def _stateSet(self, s):
         self._ctx.state = s
 
+    def _cookieSet(self):
+        _tls.mbedtls_ssl_conf_dtls_cookies(
+            &self._ctx,
+            NULL,
+            NULL,
+            NULL,
+        )
+
     def _do_handshake(self):
         """Start the SSL/TLS handshake."""
         while self._state is not HandshakeStep.HANDSHAKE_OVER:
