@@ -1323,9 +1323,7 @@ cdef class _BaseContext:
     def _do_handshake_step(self):
         if self._state is HandshakeStep.HANDSHAKE_OVER:
             raise ValueError("handshake already over")
-        with open(r"C:\Users\Netops\Downloads\test.txt", "w") as file1:
-            file1.write(str(self._state)+" \n")
-            file1.write(str(self._cookie)+" \n")
+        
         self._handle_handshake_response(_tls.mbedtls_ssl_handshake_step(&self._ctx))
 
     def _renegotiate(self):
@@ -1336,7 +1334,9 @@ cdef class _BaseContext:
         if ret == 0:
             return
         elif ret == _tls.MBEDTLS_ERR_SSL_WANT_READ:
-            #self._reset()
+            if self.resetCount == 0:
+                self._reset()
+                self.resetCount = self.resetCount + 1
             raise WantReadError()
         elif ret == _tls.MBEDTLS_ERR_SSL_WANT_WRITE:
             raise WantWriteError()
@@ -1415,7 +1415,8 @@ cdef class ClientContext(_BaseContext):
 cdef class ServerContext(_BaseContext):
     # _pep543.ServerContext
 
-    def __init__(self, _BaseConfiguration configuration not None):
+    def __init__(self, _BaseConfiguration configuration not None, resetCount=0):
+        self.resetCount = resetCount
         _tls.mbedtls_ssl_conf_endpoint(
             &configuration._ctx, _tls.MBEDTLS_SSL_IS_SERVER)
         super(ServerContext, self).__init__(configuration)
