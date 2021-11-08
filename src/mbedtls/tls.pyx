@@ -1195,13 +1195,12 @@ cdef class TLSSession:
 cdef class _BaseContext:
     # _pep543._BaseContext
     """Context base class.
-    cdef int _resetCount
+
     Args:
         configuration (TLSConfiguration): The configuration.
 
     """
     def __init__(self, _BaseConfiguration configuration not None):
-        self._resetCount = 0
         self._conf = configuration
         _exc.check_error(_tls.mbedtls_ssl_setup(&self._ctx, &self._conf._ctx))
 
@@ -1318,7 +1317,11 @@ cdef class _BaseContext:
 
     def _do_handshake(self):
         """Start the SSL/TLS handshake."""
+        counter = 0
         while self._state is not HandshakeStep.HANDSHAKE_OVER:
+            if self._state == HandshakeStep.SERVER_HELLO and counter == 0:
+                self._reset()
+                counter = counter + 1
             self._do_handshake_step()
 
     def _do_handshake_step(self):
@@ -1335,9 +1338,7 @@ cdef class _BaseContext:
         if ret == 0:
             return
         elif ret == _tls.MBEDTLS_ERR_SSL_WANT_READ:
-            if self._resetCount == 0:
-                self._reset()
-                self._resetCount = self._resetCount + 1
+            
             raise WantReadError()
         elif ret == _tls.MBEDTLS_ERR_SSL_WANT_WRITE:
             raise WantWriteError()
