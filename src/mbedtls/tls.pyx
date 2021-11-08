@@ -1200,7 +1200,8 @@ cdef class _BaseContext:
         configuration (TLSConfiguration): The configuration.
 
     """
-    def __init__(self, _BaseConfiguration configuration not None):
+    def __init__(self, _BaseConfiguration configuration not None, resetCount=0):
+        self.resetCount = resetCount
         self._conf = configuration
         _exc.check_error(_tls.mbedtls_ssl_setup(&self._ctx, &self._conf._ctx))
 
@@ -1415,8 +1416,7 @@ cdef class ClientContext(_BaseContext):
 cdef class ServerContext(_BaseContext):
     # _pep543.ServerContext
 
-    def __init__(self, _BaseConfiguration configuration not None, resetCount=0):
-        self.resetCount = resetCount
+    def __init__(self, _BaseConfiguration configuration not None):
         _tls.mbedtls_ssl_conf_endpoint(
             &configuration._ctx, _tls.MBEDTLS_SSL_IS_SERVER)
         super(ServerContext, self).__init__(configuration)
