@@ -52,7 +52,19 @@ jobs:
       - store_artifacts: &archive_dist
           path: dist
 
+  python_35:
+    docker:
+      - image: circleci/python:3.5
+        environment: *env
+    working_directory: ~/python-mbedtls
+    steps: *steps
 
+  python_36:
+    docker:
+      - image: circleci/python:3.6
+        environment: *env
+    working_directory: ~/python-mbedtls
+    steps: *steps
 
   python_37:
     docker: &qa
@@ -61,11 +73,80 @@ jobs:
     working_directory: ~/python-mbedtls
     steps: *steps
 
+  python_38:
+    docker:
+      - image: circleci/python:3.8
+        environment: *env
+    working_directory: ~/python-mbedtls
+    steps: *steps
 
+  python_39:
+    docker:
+      - image: circleci/python:3.9
+        environment: *env
+    working_directory: ~/python-mbedtls
+    steps: *steps
+
+  python_310:
+    docker:
+      - image: circleci/python:3.10-rc
+        environment: *env
+    working_directory: ~/python-mbedtls
+    steps: *steps
+
+  python_qa:
+    docker: *qa
+    working_directory: ~/python-mbedtls
+    steps:
+      - checkout
+      - run: *deps
+      - run: *python_version
+      - restore_cache:
+          keys:
+            - ccache-cov--v0--{{ checksum "python_version" }}
+      - run: *mbedtls
+      - run:
+          name: Install library
+          command: |
+            python setup.py --with-coverage build_ext --inplace
+      - save_cache:
+          key: ccache-cov--v0--{{ checksum "python_version" }}--{{ .BuildNum }}
+          paths:
+            - /home/circleci/.ccache
+      - run:
+          name: Run tests
+          command: |
+            python -m pip install --user -r requirements/tests.txt
+            PYTHONPATH=$(pwd)/src/:$PYTHONPATH
+            export PYTHONPATH
+            python -m pytest --black --isort --cov=src/ tests/
+      - run:
+          name: Coverage
+          command: |
+            python -m pip install --user coveralls
+            PYTHONPATH=$(pwd)/src/:$PYTHONPATH
+            export PYTHONPATH
+            python -m coveralls
+      - run:
+          name: Run doctest
+          command: |
+            PYTHONPATH=$(pwd)/src/:$PYTHONPATH
+            export PYTHONPATH
+            python -m doctest README.rst
+      - run:
+          name: Build API documentation
+          command: |
+            python -m pip install --user sphinx sphinx_rtd_theme
+            sphinx-build docs/source docs_out/ --color -bhtml
+      - store_artifacts:
+          path: docs_out
 
 workflows:
   version: 2
   build:
     jobs:
-
+      - python_qa
+      - python_39
+      - python_38
       - python_37
+      - python_36
