@@ -1323,8 +1323,6 @@ cdef class _BaseContext:
     def _do_handshake_step(self):
         if self._state is HandshakeStep.HANDSHAKE_OVER:
             raise ValueError("handshake already over")
-        print(self._state)
-        print(self._cookie)
         self._handle_handshake_response(_tls.mbedtls_ssl_handshake_step(&self._ctx))
 
     def _renegotiate(self):
