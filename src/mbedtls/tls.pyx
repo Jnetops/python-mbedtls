@@ -1053,6 +1053,15 @@ cdef class DTLSConfiguration(_BaseConfiguration):
         """Max handshake timeout in seconds (default 60.0)."""
         return float(self._ctx.hs_timeout_max) / 1000.0
 
+    def _cookieSet(self):
+        self._cookie = None
+        _tls.mbedtls_ssl_conf_dtls_cookies(
+            &self._ctx,
+            NULL,
+            NULL,
+            NULL,
+        )
+
     cdef _set_cookie(self, _tls._DTLSCookie cookie):
         """Register callbacks for DTLS cookies (server only)."""
         self._cookie = cookie
@@ -1304,13 +1313,7 @@ cdef class _BaseContext:
     def _stateSet(self, s):
         self._ctx.state = s
 
-    def _cookieSet(self):
-        _tls.mbedtls_ssl_conf_dtls_cookies(
-            &self._ctx,
-            NULL,
-            NULL,
-            NULL,
-        )
+    
 
     def _do_handshake(self):
         """Start the SSL/TLS handshake."""
