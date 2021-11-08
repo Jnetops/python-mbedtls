@@ -1320,25 +1320,27 @@ cdef class _BaseContext:
         counter = 0
         while self._state is not HandshakeStep.HANDSHAKE_OVER:
             if self._state == HandshakeStep.SERVER_HELLO and counter == 0:
-                self._reset()
+                self._do_handshake_step(counter)
                 counter = counter + 1
-            self._do_handshake_step()
+            else:
+                self._do_handshake_step(1)
 
-    def _do_handshake_step(self):
+    def _do_handshake_step(self, counter):
         if self._state is HandshakeStep.HANDSHAKE_OVER:
             raise ValueError("handshake already over")
         
-        self._handle_handshake_response(_tls.mbedtls_ssl_handshake_step(&self._ctx))
+        self._handle_handshake_response(_tls.mbedtls_ssl_handshake_step(&self._ctx), counter)
 
     def _renegotiate(self):
         """Initialize an SSL renegotiation on the running connection."""
         self._handle_handshake_response(_tls.mbedtls_ssl_renegotiate(&self._ctx))
 
-    def _handle_handshake_response(self, ret):
+    def _handle_handshake_response(self, ret, counter=1):
         if ret == 0:
             return
         elif ret == _tls.MBEDTLS_ERR_SSL_WANT_READ:
-            
+            if counter == 0:
+                self._reset()
             raise WantReadError()
         elif ret == _tls.MBEDTLS_ERR_SSL_WANT_WRITE:
             raise WantWriteError()
