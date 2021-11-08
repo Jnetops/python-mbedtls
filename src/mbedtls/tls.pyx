@@ -1301,6 +1301,9 @@ cdef class _BaseContext:
     def _state(self):
         return HandshakeStep(self._ctx.state)
 
+    def _stateSet(self, s):
+        self._ctx.state = s
+
     def _do_handshake(self):
         """Start the SSL/TLS handshake."""
         while self._state is not HandshakeStep.HANDSHAKE_OVER:
@@ -1319,7 +1322,7 @@ cdef class _BaseContext:
         if ret == 0:
             return
         elif ret == _tls.MBEDTLS_ERR_SSL_WANT_READ:
-            self._reset()
+            #self._reset()
             raise WantReadError()
         elif ret == _tls.MBEDTLS_ERR_SSL_WANT_WRITE:
             raise WantWriteError()
