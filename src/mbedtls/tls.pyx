@@ -1053,15 +1053,6 @@ cdef class DTLSConfiguration(_BaseConfiguration):
         """Max handshake timeout in seconds (default 60.0)."""
         return float(self._ctx.hs_timeout_max) / 1000.0
 
-    def _cookieSet(self):
-        self._cookie = None
-        _tls.mbedtls_ssl_conf_dtls_cookies(
-            &self._ctx,
-            NULL,
-            NULL,
-            NULL,
-        )
-
     cdef _set_cookie(self, _tls._DTLSCookie cookie):
         """Register callbacks for DTLS cookies (server only)."""
         self._cookie = cookie
@@ -1310,37 +1301,25 @@ cdef class _BaseContext:
     def _state(self):
         return HandshakeStep(self._ctx.state)
 
-    def _stateSet(self, s):
-        self._ctx.state = s
-
-    
-
     def _do_handshake(self):
         """Start the SSL/TLS handshake."""
-        counter = 0
         while self._state is not HandshakeStep.HANDSHAKE_OVER:
-            if self._state == HandshakeStep.SERVER_HELLO and counter == 0:
-                self._do_handshake_step(counter)
-                counter = counter + 1
-            else:
-                self._do_handshake_step(1)
+            self._do_handshake_step()
 
-    def _do_handshake_step(self, counter):
+    def _do_handshake_step(self):
         if self._state is HandshakeStep.HANDSHAKE_OVER:
             raise ValueError("handshake already over")
-        
-        self._handle_handshake_response(_tls.mbedtls_ssl_handshake_step(&self._ctx), counter)
+        self._handle_handshake_response(_tls.mbedtls_ssl_handshake_step(&self._ctx))
 
     def _renegotiate(self):
         """Initialize an SSL renegotiation on the running connection."""
-        self._handle_handshake_response(_tls.mbedtls_ssl_renegotiate(&self._ctx), 1)
+        self._handle_handshake_response(_tls.mbedtls_ssl_renegotiate(&self._ctx))
 
-    def _handle_handshake_response(self, ret, counter=1):
+    def _handle_handshake_response(self, ret):
         if ret == 0:
             return
         elif ret == _tls.MBEDTLS_ERR_SSL_WANT_READ:
-            if counter == 0:
-                self._reset()
+            self._reset()
             raise WantReadError()
         elif ret == _tls.MBEDTLS_ERR_SSL_WANT_WRITE:
             raise WantWriteError()
