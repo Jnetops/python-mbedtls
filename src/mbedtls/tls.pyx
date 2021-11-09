@@ -1333,7 +1333,7 @@ cdef class _BaseContext:
 
     def _renegotiate(self):
         """Initialize an SSL renegotiation on the running connection."""
-        self._handle_handshake_response(_tls.mbedtls_ssl_renegotiate(&self._ctx))
+        self._handle_handshake_response(_tls.mbedtls_ssl_renegotiate(&self._ctx), 1)
 
     def _handle_handshake_response(self, ret, counter=1):
         if ret == 0:
